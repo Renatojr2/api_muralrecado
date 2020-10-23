@@ -1,24 +1,20 @@
 import express from 'express';
 import { promises } from 'fs';
 const { readFile, writeFile } = promises;
+import { v4 as uuidv4 } from 'uuid';
+
+import Recados from './models/data.js';
 
 const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    let recado = req.body;
+    const recado = await Recados.create({
+      title: req.body.title,
+      description: req.body.description,
+    });
 
-    const data = JSON.parse(await readFile('recados.json'));
-
-    recado = { id: data.nextId++, ...recado };
-
-    data.recados.push(recado);
-
-    await writeFile('recados.json', JSON.stringify(data, null, 2));
-
-    res.json(data);
-
-    res.end();
+    return res.json(recado);
   } catch (err) {
     res.status(400).json({ err: err });
   }
@@ -26,20 +22,17 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const data = JSON.parse(await readFile('recados.json'));
-    res.send(data);
+    const recados = await Recados.find();
+    res.send(recados);
   } catch (err) {
     res.status(400).send({ err: err });
   }
 });
 router.delete('/:id', async (req, res) => {
   try {
-    const data = JSON.parse(await readFile('recados.json'));
-    data.recados = data.recados.filter((recado) => {
-      return recado.id !== parseInt(req.params.id);
-    });
-    await writeFile('recados.json', JSON.stringify(data, null, 2));
-
+    const recados = await Recados.findById(req.params.id);
+    await recados.remove();
+    res.send({ ok: 'ok' });
     res.end();
   } catch (err) {
     res.status(400).send({ err: err });
