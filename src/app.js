@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/recados', router);
 
-app.listen(3333, async () => {
+app.listen(process.env.PORT || 3333, async () => {
   try {
     await readFile('recados.json');
   } catch (err) {
